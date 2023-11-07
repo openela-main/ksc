@@ -1,0 +1,57 @@
+diff --git a/ksc.py b/ksc.py
+index 4652dde..a6dc9f3 100755
+--- a/ksc.py
++++ b/ksc.py
+@@ -631,12 +631,16 @@ class Ksc(object):
+
+             # Ignore undefined options in parser instead of throwing error
+             class IOptParse(OptionParser):
+-                def error(self, msg):
+-                    pass
++                def _process_args(self, largs, rargs, values):
++                    while rargs:
++                        try:
++                            OptionParser._process_args(self,largs,rargs,values)
++                        except:
++                            pass
+
+             parser = IOptParse()
+-            parser.add_option("-k", "--ko")
+-            opts, _ = parser.parse_args(commands[0:])
++            parser.add_option("-k", "--ko", action="append", dest="ko")
++            opts, _ = parser.parse_args(commands)
+             return opts.ko
+         except Exception:
+             return None
+diff --git a/utils.py b/utils.py
+index 8038076..b75e770 100644
+--- a/utils.py
++++ b/utils.py
+@@ -377,8 +377,12 @@ def sendmail(filename, arch, mock, conf, releasename, module, subcomponent,
+         return
+
+     body  = f"Product:  Red Hat Enterprise Linux {major}\n"
+-    body += f"Release:  Centos Stream\n"
+-    body += f"Platform: {arch}\n"
++    if releasename and len(releasename):
++        body += f"Release:  {releasename[0]}\n"
++    if centos:
++        body += "CentOS Stream: True\n"
++    if arch:
++        body += f"Platform: {arch}\n"
+
+     if 'group' in conf and conf['group'] != 'partner-group':
+         body += f"Partner Group: {conf['group']}\n"
+@@ -387,7 +391,11 @@ def sendmail(filename, arch, mock, conf, releasename, module, subcomponent,
+         body += f"Partner: {conf['partner']}\n"
+
+     body += "\n"
+-    body += str(module) + "\n"
++    if module:
++        if type(module) is list:
++            body += ", ".join(module) + "\n"
++        else:
++            body += str(module) + "\n"
+     body += "\n"
+     body += "---\n"
+     body += "\n"
