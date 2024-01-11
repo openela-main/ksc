@@ -1,0 +1,9 @@
+diff -ru a/ksc b/ksc
+--- a/ksc	2022-02-11 07:47:47.000000000 +0100
++++ b/ksc	2022-02-21 13:22:53.038431651 +0100
+@@ -1,4 +1,4 @@
+ #!/bin/sh
+ export PYTHONPATH=/usr/share/ksc
+-exec /usr/bin/python3 -tt /usr/share/ksc/ksc.py "$@"
++exec /usr/libexec/platform-python -tt /usr/share/ksc/ksc.py "$@"
+ 
