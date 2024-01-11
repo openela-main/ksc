@@ -8,7 +8,7 @@
 
 Name:		ksc
 Version:	1.12
-Release:	2%{?dist}
+Release:	4%{?dist}
 Summary:	Kernel source code checker
 Group:		Development/Tools
 AutoReqProv:	no
@@ -23,6 +23,7 @@ BuildRequires:	python3-devel
 BuildRequires:	python3-setuptools
 Source0:	https://github.com/RedHatOfficial/ksc/archive/%{commit}/%{name}-%{shortcommit}.tar.gz
 Patch0:		0001-manpage.patch
+Patch1:		0002-c9s-notifications.patch
 
 %description
 A kernel module source code checker to find usage of select symbols
@@ -30,6 +31,7 @@ A kernel module source code checker to find usage of select symbols
 %prep
 %forgesetup
 %patch0 -p1
+%patch1 -p1
 
 %build
 %py3_build
@@ -48,6 +50,9 @@ install -D ksc.1 %{buildroot}%{_mandir}/man1/ksc.1
 %{python3_sitelib}/ksc-%{version}*.egg-info
 
 %changelog
+* Mon Mar 06 2023 Čestmír Kalina <ckalina@redhat.com> - 1.12-3
+- Resolves: #2165820 - The email method always mark CentOS Stream as release
+
 * Mon Jan 23 2023 Čestmír Kalina <ckalina@redhat.com> - 1.12-2
 - Resolves: #2066231 - add manpage docs
 
