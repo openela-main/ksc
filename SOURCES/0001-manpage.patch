@@ -1,0 +1,93 @@
+diff --git a/data/ksc.conf b/data/ksc.conf
+index 8ee4551..c4c53fc 100644
+--- a/data/ksc.conf
++++ b/data/ksc.conf
+@@ -1,6 +1,12 @@
++[global]
++user=user@example.com
++partner=none
++partnergroup=none
+ [bugzilla]
+-user=user@redhat.com
+-partner=partner-name
+-partnergroup=partner-group
++enable=1
+ server=https://bugzilla.redhat.com/xmlrpc.cgi
+-api_key=api_key
++api_key=API_KEY
++[mailing_list]
++enable=0
++smtp=smtp.example.com
++to=kabi-requests@redhat.com
+diff --git a/ksc.1 b/ksc.1
+index 078dd83..3c3ce86 100644
+--- a/ksc.1
++++ b/ksc.1
+@@ -139,12 +139,18 @@ partnergroup=none
+ .br
+ [bugzilla]
+ .br
++enable=1
++.br
+ server=https://bugzilla.redhat.com/xmlrpc.cgi
+ .br
+ api_key=API_KEY
+ .br
+ [mailing_list]
+ .br
++enable=1
++.br
++smtp=smtp.example.com
++.br
+ to=kabi-requests@redhat.com
+ 
+ Please replace the values above by your credentials.
+@@ -153,7 +159,10 @@ Mandatory fields for any submission method: user, partner, partnergroup.
+ .br
+ Mandatory fields for Bugzilla submission method: server, api_key.
+ .br
+-Mandatory fields for mailing list submission method: to.
++Mandatory fields for mailing list submission method: to, smtp.
++
++By default, Bugzilla (mailing list) submission method is auto-enabled
++(auto-disabled) and must be opted out (in).
+ 
+ Note that server must be a valid XML RPC Bugzilla link, user and to fields
+ must be valid e-mail addresses.
+diff --git a/utils.py b/utils.py
+index ce1a613..8038076 100644
+--- a/utils.py
++++ b/utils.py
+@@ -220,6 +220,7 @@ def getconfig(path='/etc/ksc.conf', mock=False, require_partner=False, verbose=T
+ 
+     # To be deprecated in the future:
+     result['bugzilla_enable'] = True
++    result['mailing_list_enable'] = False
+ 
+     cat = None
+     for line in lines:
+@@ -305,10 +306,10 @@ def getconfig(path='/etc/ksc.conf', mock=False, require_partner=False, verbose=T
+         raise ConfigDeprecatedValueException(path, key, result[key])
+ 
+     if not (result['method'] & SubmissionMethod.BUGZILLA.value):
+-        conf["bugzilla_enable"] = False
++        result["bugzilla_enable"] = False
+ 
+     if not (result['method'] & SubmissionMethod.MAILING_LIST.value):
+-        conf["mailing_list_enable"] = False
++        result["mailing_list_enable"] = False
+ 
+     return result
+ 
+@@ -365,6 +366,11 @@ def sendmail(filename, arch, mock, conf, releasename, module, subcomponent,
+     Email ksc report.
+     """
+ 
++    for field in [ "smtp", "user", "to" ]:
++        if field not in conf:
++            print(f"Could not send an email, '{field}' config field is missing.")
++            return
++
+     major, centos = get_major_release(releasename)
+     if not major:
+         print("Invalid releasename: Mail not sent.")
